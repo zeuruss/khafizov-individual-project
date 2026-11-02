@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Поездка {{ trip.id }}</title>
+</head>
+<body>
+    <h1>Информация о поездке {{ trip.id }}</h1>
+    <p>Поиск через MyHashMap: <b>{{ hash_ms }} ms</b> | Обычный линейный поиск: <b>{{ linear_ms }} ms</b></p>
+
+    {% if request.query_params.get("updated") %}<p>Длительность обновлена.</p>{% endif %}
+    {% if request.query_params.get("error") %}<p>Длительность должна быть неотрицательной.</p>{% endif %}
+
+    <ul>
+        <li>row_id (индекс в Segment Tree): {{ trip.row_id }}</li>
+        <li>ID поездки: {{ trip.id }}</li>
+        <li>Vendor ID: {{ trip.vendor_id }}</li>
+        <li>Время начала (pickup): {{ trip.pickup_datetime }}</li>
+        <li>Время окончания (dropoff): {{ trip.dropoff_datetime }}</li>
+        <li>Количество пассажиров: {{ trip.passenger_count }}</li>
+        <li>Координаты посадки: {{ trip.pickup_latitude }}, {{ trip.pickup_longitude }}</li>
+        <li>Координаты высадки: {{ trip.dropoff_latitude }}, {{ trip.dropoff_longitude }}</li>
+        <li>store_and_fwd_flag: {{ trip.store_and_fwd_flag }}</li>
+        <li>Длительность поездки (сек): <b>{{ trip.trip_duration }}</b></li>
+    </ul>
+
+    <h2>Изменить длительность поездки (Segment Tree UPDATE)</h2>
+    <form method="post" action="/trips/{{ trip.id }}/update">
+        <label>Новая длительность (сек): <input type="number" name="trip_duration" value="{{ trip.trip_duration }}" min="0" required></label>
+        <button type="submit">Обновить</button>
+    </form>
+
+    <br>
+    <a href="/trips">Вернуться к таблице поездок</a>
+</body>
+</html>
