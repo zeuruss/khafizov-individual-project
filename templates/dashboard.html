@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>NYC Taxi Dashboard</title>
+</head>
+<body>
+    <form method="post" action="/api/logout">
+        Пользователь: <b>{{ user }}</b>
+        <button type="submit">Logout</button>
+    </form>
+    <hr>
+
+    <h1>Аналитический дашборд NYC Taxi</h1>
+
+    <h2>1. Статистика индексов (HashMap и Segment Tree)</h2>
+    <ul>
+        <li>Загружено поездок: {{ total_rows }}</li>
+        <li>Время построения HashMap: {{ hash_build_ms }} ms</li>
+        <li>HashMap capacity: {{ hash_stats.capacity }} (load factor: {{ hash_stats.load_factor }})</li>
+        <li>Пустых корзин: {{ hash_stats.empty_buckets }}, макс. цепочка коллизий: {{ hash_stats.max_bucket }}</li>
+        <li>Время построения Segment Tree: {{ segment_build_ms }} ms</li>
+    </ul>
+
+    <hr>
+    <h2>2. Поиск поездки по ID (MyHashMap vs Linear Search)</h2>
+    <form method="get" action="/trips">
+        <label>ID поездки: <input type="text" name="trip_id" placeholder="id0729323" required></label>
+        <button type="submit">Найти</button>
+    </form>
+
+    {% if search_result %}
+        {% if search_result.trip %}
+            <p>Найдена поездка: <a href="/trips/{{ search_result.trip.id }}">{{ search_result.trip.id }}</a> (row_id: {{ search_result.trip.row_id }})</p>
+        {% else %}
+            <p>Поездка с таким ID не найдена.</p>
+        {% endif %}
+        <p>Время Hash lookup: <b>{{ search_result.hash_ms }} ms</b> | Время Linear search: <b>{{ search_result.linear_ms }} ms</b></p>
+    {% endif %}
+
+    <hr>
+    <h2>3. Запрос суммы времени поездок на отрезке (Segment Tree)</h2>
+    <form method="get" action="/trips">
+        <label>Индекс L: <input type="number" name="l" min="0" required></label>
+        <label>Индекс R: <input type="number" name="r" min="0" required></label>
+        <button type="submit">Посчитать сумму (SUM)</button>
+    </form>
+
+    {% if query_result %}
+        {% if query_result.error %}
+            <p>{{ query_result.error }}</p>
+        {% else %}
+            <p>Отрезок [{{ query_result.l }} .. {{ query_result.r }}]:</p>
+            <ul>
+                <li>Сумма через Segment Tree: <b>{{ query_result.st_sum }} сек</b> (время: {{ query_result.st_ms }} ms)</li>
+                <li>Сумма обычным проходом: <b>{{ query_result.naive_sum }} сек</b> (время: {{ query_result.naive_ms }} ms)</li>
+            </ul>
+        {% endif %}
+    {% endif %}
+
+    <p><a href="/trips?bench=1">Запустить тест (1000 операций update + query)</a></p>
+    {% if benchmark %}
+        <p>Результат теста 1000 операций: Segment Tree = <b>{{ benchmark.st_ms }} ms</b>, Обычный проход = <b>{{ benchmark.naive_ms }} ms</b> (ускорение в {{ benchmark.speedup }}x раз)</p>
+    {% endif %}
+
+    <hr>
+    <h2>4. Таблица поездок (отсортировано по pickup_datetime)</h2>
+    <p>Страница {{ page }} из {{ total_pages }}</p>
+
+    <table border="1">
+        <tr>
+            <th>row_id</th>
+            <th>ID</th>
+            <th>Время посадки</th>
+            <th>Пассажиры</th>
+            <th>Длительность (сек)</th>
+        </tr>
+        {% for trip in trips %}
+        <tr>
+            <td>{{ trip.row_id }}</td>
+            <td><a href="/trips/{{ trip.id }}">{{ trip.id }}</a></td>
+            <td>{{ trip.pickup_datetime }}</td>
+            <td>{{ trip.passenger_count }}</td>
+            <td>{{ trip.trip_duration }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <p>
+        {% if page > 1 %}
+            <a href="/trips?page={{ page - 1 }}">Назад</a>
+        {% endif %}
+        {% if page < total_pages %}
+            <a href="/trips?page={{ page + 1 }}">Вперед</a>
+        {% endif %}
+    </p>
+</body>
+</html>
